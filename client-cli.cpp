@@ -65,7 +65,7 @@ void Client::cliLoop(){
 
     string cmd;
     while(true){
-        cout<<"> ";
+        cout<<"mini-redis> ";
         getline(cin,cmd);
           
         if(cmd == "exit")

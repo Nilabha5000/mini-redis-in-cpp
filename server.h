@@ -2,7 +2,9 @@
 #define SERVER_H
 #include <string>
 #include <cstring>
+#include <vector>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -14,9 +16,11 @@ class Server{
    public:
    Server();
    ~Server();
-   void servSend(std::string &s);
+   void servSend(std::string res);
    std::string cliRecieve();
-   void start();
+   void servLoop();
+   void decodeResp(std::vector<std::string>&tokens , std::string &encodeStr);
+   bool startSuccesfully();
 
 };
 
