@@ -17,7 +17,7 @@ class Client{
     bool isConnectedSuccesfully();
     std::string clientRecieve(void );
     std::string encodeResp(std::vector<std::string>&tokens);
-    void clientSend(std::string &encodedStr);
+    bool isSendSuccesfully(std::string &encodedStr);
 
     void cliLoop(void);
     ~Client();

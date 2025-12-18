@@ -73,9 +73,13 @@ void Client::cliLoop(){
         if(cmd != ""){
             vector<string>tokens = tokenize(cmd);
             string encodedStr = encodeResp(tokens);
-            ssize_t n = send(this->clientFd,encodedStr.c_str(), encodedStr.length(),0);
+            if(!isSendSuccesfully(encodedStr)){
+                cerr<<"send failed!\n";
+            }
 
-            if(n == -1) cerr<<"send failed";
+            string res = clientRecieve();
+            cout<<res;
+
         }
 
         
@@ -95,6 +99,27 @@ string Client::encodeResp(vector<string>&tokens){
        }
 
        return encodedStr;
+}
+
+bool Client::isSendSuccesfully(string &encodedStr){
+    ssize_t n = send(this->clientFd,encodedStr.c_str(), encodedStr.length(),0);
+
+    if(n == -1) return false;
+    return true;
+}
+
+string Client::clientRecieve(void){
+    char resBuffer[4096] = {0};
+    memset(resBuffer,0,4096);
+
+    ssize_t n = recv(this->clientFd,resBuffer,4096,0);
+    if(n == -1){
+        return "";
+    }
+
+    string res = resBuffer;
+
+    return res;
 }
 int main(){
      

@@ -1,4 +1,5 @@
 #include "server.h"
+#include "database.h"
 #include <iostream>
 using namespace std;
 Server ::Server(){
@@ -45,23 +46,36 @@ bool Server:: startSuccesfully(){
 }
 
 void Server::servLoop(){
-      while(true){
+    Database db;
+    while(true){
 
 
-        string str = cliRecieve();
+        string str = servRecieve();
         if(str.length() == 0) {
             cout<<"Client disconnected\n";
             break;
         }
-        cout<<str<<"\n";
+        //cout<<str<<"\n";
         vector<string>tokens;
         decodeResp(tokens,str);
-        cout<<"the tokens\n";
-        for(auto token : tokens){
-
-            cout<<token<<"\n";
+        try{
+            if(tokens[0] == "SET" || tokens[0] == "set"){
+                db.set(tokens);
+                servSend("+OK\r\n");
+            }
+            else if(tokens[0] == "GET" || tokens[0] == "get"){
+                 string res = db.get(tokens);
+                 cout<<res<<"\n";
+                 servSend("$"+to_string(res.length())+"\r\n"+res+"\r\n");
+            }
+            else{
+                servSend("-ERR unknown command\r\n");
+            }
         }
-        cout<<"\n";
+        catch(string e){
+            servSend(e);
+        }
+       
     }
 
 }
@@ -114,7 +128,7 @@ void Server::decodeResp(vector<string>&tokens , string &encodedStr){
        k++;
     }
 }
-string Server ::cliRecieve(){
+string Server ::servRecieve(){
     char buffer[500];
     memset(buffer,0,500);
     ssize_t n = recv(this->clientFd,buffer,500,0);
@@ -144,7 +158,6 @@ Server :: ~Server(){
     if(this->clientFd >= 0) close(this->clientFd);
     if(this->serverFd >= 0) close(this->serverFd);
 }
-
 int main(){
     cout<<"This is server is running on PORT:" <<PORT<<"\n";
     Server serv;

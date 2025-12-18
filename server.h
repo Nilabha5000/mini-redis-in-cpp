@@ -17,7 +17,7 @@ class Server{
    Server();
    ~Server();
    void servSend(std::string res);
-   std::string cliRecieve();
+   std::string servRecieve();
    void servLoop();
    void decodeResp(std::vector<std::string>&tokens , std::string &encodeStr);
    bool startSuccesfully();
