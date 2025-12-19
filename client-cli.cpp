@@ -78,7 +78,7 @@ void Client::cliLoop(){
             }
 
             string res = clientRecieve();
-            cout<<res;
+            decodeResp(res);
 
         }
 
@@ -120,6 +120,54 @@ string Client::clientRecieve(void){
     string res = resBuffer;
 
     return res;
+}
+void Client::decodeResp(string &encodedStr){
+    if(encodedStr.empty()){
+        cout << "(empty response)\n";
+        return;
+    }
+
+    string decodedStr = "";
+
+    if(encodedStr[0] == '+' || encodedStr[0] == '-'){
+
+        decodedStr = encodedStr.substr(1,encodedStr.length()-1);
+        cout<<decodedStr;
+    }
+    else if(encodedStr[0] == '$'){
+        string sNum = "";
+        int i = 1;
+        if(encodedStr[i] == '-')
+        {
+            sNum = "-";
+            i++;
+        }
+        for(; isdigit(encodedStr[i]); ++i){
+               sNum += encodedStr[i];
+        }
+         
+        if(sNum == "-1")
+        {
+            decodedStr = "(nil)\r\n";
+            cout<<decodedStr;
+            return;
+        }
+
+        i +=2;
+        int n = stoi(sNum);
+        decodedStr = encodedStr.substr(i,n);
+        cout<<decodedStr<<"\n";
+    }
+
+    else if(encodedStr[0] == ':'){
+        string decodedStr = "(integer) ";
+        
+        for(int i = 1; encodedStr[i] != '\r'; ++i)
+            decodedStr += encodedStr[i];
+        cout<<decodedStr<<"\r\n";
+    
+    }
+    
 }
 int main(){
      

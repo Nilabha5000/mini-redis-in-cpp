@@ -10,11 +10,11 @@ Server ::Server(){
 
 bool Server:: startSuccesfully(){
      // check if the server fd is less than 0
-      if(this->serverFd < 0)
-      {
-          cerr<<"Error to start the server";
-          return false;
-      }
+    if(this->serverFd < 0)
+    {
+        cerr<<"Error to start the server";
+        return false;
+    }
      struct sockaddr_in address;
      struct sockaddr_in cliAddress;
      memset(&address, 0, sizeof(address));
@@ -55,7 +55,6 @@ void Server::servLoop(){
             cout<<"Client disconnected\n";
             break;
         }
-        //cout<<str<<"\n";
         vector<string>tokens;
         decodeResp(tokens,str);
         try{
@@ -64,9 +63,14 @@ void Server::servLoop(){
                 servSend("+OK\r\n");
             }
             else if(tokens[0] == "GET" || tokens[0] == "get"){
-                 string res = db.get(tokens);
-                 cout<<res<<"\n";
-                 servSend("$"+to_string(res.length())+"\r\n"+res+"\r\n");
+                string res = db.get(tokens);
+                servSend("$"+to_string(res.length())+"\r\n"+res+"\r\n");
+            }
+            else if(tokens[0] == "DEL" || tokens[0] == "del"){
+                db.isDeletedSuccesfully(tokens) ? servSend(":1\r\n") : servSend(":0\r\n");
+            }
+            else if(tokens[0] == "EXISTS" || tokens[0] == "exists"){
+                db.isExists(tokens) ? servSend(":1\r\n") : servSend(":0\r\n");
             }
             else{
                 servSend("-ERR unknown command\r\n");

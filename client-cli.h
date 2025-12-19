@@ -18,7 +18,7 @@ class Client{
     std::string clientRecieve(void );
     std::string encodeResp(std::vector<std::string>&tokens);
     bool isSendSuccesfully(std::string &encodedStr);
-
+    void decodeResp(std::string &encodeStr);
     void cliLoop(void);
     ~Client();
 };

@@ -6,9 +6,10 @@
 #include <vector>
 class Database{
     std::unordered_map<std::string, std::string>db;
-    public:
-    
+    public:    
     void set(std::vector<std::string>&tokens);
     std::string get(std::vector<std::string> &tokens);
+    bool isDeletedSuccesfully(std::vector<std::string>&tokens);
+    bool isExists(std::vector<std::string>&tokens);
 };
 #endif
