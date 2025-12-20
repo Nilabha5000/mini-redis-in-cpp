@@ -72,6 +72,14 @@ void Server::servLoop(){
             else if(tokens[0] == "EXISTS" || tokens[0] == "exists"){
                 db.isExists(tokens) ? servSend(":1\r\n") : servSend(":0\r\n");
             }
+            else if(tokens[0] == "INCR" || tokens[0] == "incr"){
+                string res = db.incr(tokens);
+                servSend(":"+res+"\r\n");
+            }
+            else if(tokens[0] == "DECR" || tokens[0] == "decr"){
+                string res = db.decr(tokens);
+                servSend(":"+res+"\r\n");
+            }
             else{
                 servSend("-ERR unknown command\r\n");
             }

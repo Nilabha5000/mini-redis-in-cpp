@@ -81,9 +81,6 @@ void Client::cliLoop(){
             decodeResp(res);
 
         }
-
-        
-
         cmd.clear();
     }
 
