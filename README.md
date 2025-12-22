@@ -33,6 +33,7 @@ It is a **learning-oriented implementation** built step by step to understand ho
 - | `EXISTS key` | Check if key exists | Integer |
 - | `INCR key` | Increment integer value | Integer |
 - | `DECR key` | Decrement integer value | Integer |
+- | `PING [message]`|Returns PONG if no argument is provided, otherwise return a copy of the argument as a bulk | Bulk String / Simple String (`+PONG`) |
 
 ---
 

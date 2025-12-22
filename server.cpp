@@ -1,5 +1,6 @@
 #include "server.h"
 #include "database.h"
+#include "command_dispatch.h"
 #include <iostream>
 using namespace std;
 Server ::Server(){
@@ -47,6 +48,8 @@ bool Server:: startSuccesfully(){
 
 void Server::servLoop(){
     Database db;
+    CommandDispatcher cd(*this);
+    cd.setAllCommands();
     while(true){
 
 
@@ -58,31 +61,9 @@ void Server::servLoop(){
         vector<string>tokens;
         decodeResp(tokens,str);
         try{
-            if(tokens[0] == "SET" || tokens[0] == "set"){
-                db.set(tokens);
-                servSend("+OK\r\n");
-            }
-            else if(tokens[0] == "GET" || tokens[0] == "get"){
-                string res = db.get(tokens);
-                servSend("$"+to_string(res.length())+"\r\n"+res+"\r\n");
-            }
-            else if(tokens[0] == "DEL" || tokens[0] == "del"){
-                db.isDeletedSuccesfully(tokens) ? servSend(":1\r\n") : servSend(":0\r\n");
-            }
-            else if(tokens[0] == "EXISTS" || tokens[0] == "exists"){
-                db.isExists(tokens) ? servSend(":1\r\n") : servSend(":0\r\n");
-            }
-            else if(tokens[0] == "INCR" || tokens[0] == "incr"){
-                string res = db.incr(tokens);
-                servSend(":"+res+"\r\n");
-            }
-            else if(tokens[0] == "DECR" || tokens[0] == "decr"){
-                string res = db.decr(tokens);
-                servSend(":"+res+"\r\n");
-            }
-            else{
-                servSend("-ERR unknown command\r\n");
-            }
+           if(!cd.isExecuteSuccesfully(tokens,db)){
+              servSend("-ERR unknown command\r\n");
+           }
         }
         catch(string e){
             servSend(e);
@@ -173,7 +154,6 @@ Server :: ~Server(){
 int main(){
     cout<<"This is server is running on PORT:" <<PORT<<"\n";
     Server serv;
-
     if(serv.startSuccesfully()){
 
         serv.servLoop();

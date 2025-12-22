@@ -119,50 +119,62 @@ string Client::clientRecieve(void){
     return res;
 }
 void Client::decodeResp(string &encodedStr){
+    //check for encodedstr is empty the return noting.
     if(encodedStr.empty()){
         cout << "(empty response)\n";
         return;
     }
-
+    //it stores the decoded result of encodedstr.
     string decodedStr = "";
-
-    if(encodedStr[0] == '+' || encodedStr[0] == '-'){
+    //check for simple string or errors.
+    if(SIMPLE_STR(encodedStr) || ERROR(encodedStr)){
 
         decodedStr = encodedStr.substr(1,encodedStr.length()-1);
         cout<<decodedStr;
     }
-    else if(encodedStr[0] == '$'){
-        string sNum = "";
+    //check for bulk string.
+    else if(BULK_STR(encodedStr)){
+        //for extracting number
+        string wordSizeStr = "";
         int i = 1;
         if(encodedStr[i] == '-')
         {
-            sNum = "-";
+            wordSizeStr = "-";
             i++;
         }
+        //extracting the size of the word.
+        //for example $size\r\n<word>\r\n.
+        //snum contains the size.
         for(; isdigit(encodedStr[i]); ++i){
-               sNum += encodedStr[i];
+               wordSizeStr += encodedStr[i];
         }
-         
-        if(sNum == "-1")
+        
+        //check if the wordSizeStr is "-1" then print (nil).
+        if(wordSizeStr == "-1")
         {
             decodedStr = "(nil)\r\n";
             cout<<decodedStr;
             return;
         }
-
+        //skiping /r/n incrementing i counter by 2.
         i +=2;
-        int n = stoi(sNum);
+
+        int n = stoi(wordSizeStr);
         decodedStr = encodedStr.substr(i,n);
         cout<<decodedStr<<"\n";
     }
-
-    else if(encodedStr[0] == ':'){
-        string decodedStr = "(integer) ";
+    //check for integer.
+    else if(INTEGER(encodedStr)){
+        decodedStr = "(integer) ";
         
         for(int i = 1; encodedStr[i] != '\r'; ++i)
             decodedStr += encodedStr[i];
         cout<<decodedStr<<"\r\n";
     
+    }
+    else{
+        decodedStr = "(unknown response)\r\t";
+        cout<<decodedStr;
     }
     
 }
