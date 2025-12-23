@@ -37,7 +37,7 @@ bool Server:: startSuccesfully(){
         return false;
     }
     socklen_t cliAddrLen = sizeof(cliAddress);
-    this->clientFd = accept(this->serverFd,(struct sockaddr*)&address, &addrlen);
+    this->clientFd = accept(this->serverFd,(struct sockaddr*)&cliAddress, &cliAddrLen);
     if(this->clientFd < 0){
            cerr<<"connection failed\n";
            return false;
@@ -152,7 +152,7 @@ Server :: ~Server(){
     if(this->serverFd >= 0) close(this->serverFd);
 }
 int main(){
-    cout<<"This is server is running on PORT:" <<PORT<<"\n";
+    cout<<"This is server running on PORT:" <<PORT<<"\n";
     Server serv;
     if(serv.startSuccesfully()){
 

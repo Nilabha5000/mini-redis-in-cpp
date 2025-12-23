@@ -20,7 +20,7 @@ It is a **learning-oriented implementation** built step by step to understand ho
 - In-memory key–value storage using STL containers
 - Command validation and proper RESP responses
 - Error handling using RESP error format
-
+- Automatic key expiration with TTL (EX) support
 ---
 
 ## Supported Commands
@@ -62,14 +62,14 @@ $5\r\nAlice\r\n
 
 ## Project Structure
 ```
-.
-├── client-cli.cpp # Client CLI, RESP encoding/decoding
-├── server.cpp # TCP server, command routing
-├── database.cpp # In-memory key–value store logic
-├── server.h
-├── client-cli.h
-├── database.h
-└── README.md
+├── client-cli.cpp        # Client CLI, RESP encoding/decoding
+├── client-cli.h          # Client interface and macros
+├── server.cpp            # TCP server loop, request handling
+├── server.h              # Server class definition
+├── database.cpp          # In-memory key–value store with TTL logic
+├── database.h            # Database interface
+├── command_dispatcher.h  # Command-to-handler mapping (SET, GET, DEL, etc.)
+└── README.md              # Project overview and usage
 ```
 ---
 
@@ -117,7 +117,8 @@ mini-redis> DEL counter
 
 mini-redis> GET counter
 (nil)
-
+mini-redis> SET counter1 100 EX 10 #expires after 10 seconds
+OK
 ```
 
 ## Limitations

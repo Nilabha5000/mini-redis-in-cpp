@@ -4,8 +4,18 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <algorithm>
+struct Value
+{
+     std::string data;
+     long long expireAt;
+};
+
 class Database{
-    std::unordered_map<std::string, std::string>db;
+    std::unordered_map<std::string, Value>db;
+    long long currentTimeMs();
+    bool isExpired(std::string &key);
     bool isNumber(std::string &str);
     public:    
     void set(std::vector<std::string>&tokens);
