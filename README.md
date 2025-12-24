@@ -130,7 +130,5 @@ OK
 
 - Assumes one recv() = one complete RESP message
 
-- No expiration / TTL support
-
 - These are intentional trade-offs for learning clarity.
 
