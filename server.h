@@ -8,15 +8,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #define PORT 6379
 class Server{
    int serverFd;
-   int clientFd;
+   friend void clientHandler(int clientFd , void*db, void *cd , Server *server);
    public:
    Server();
    ~Server();
-   void servSend(std::string res);
-   std::string servRecieve();
+   void servSend(std::string res,int clientFd);
+   std::string servRecieve(int clientFd);
    void servLoop();
    void decodeResp(std::vector<std::string>&tokens , std::string &encodeStr);
    bool startSuccesfully();

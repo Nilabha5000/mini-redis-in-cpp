@@ -122,7 +122,6 @@ OK
 ```
 
 ## Limitations
-- Single client connection
 
 - No persistence (in-memory only)
 

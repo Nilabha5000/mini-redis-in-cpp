@@ -4,42 +4,42 @@
 #include "server.h"
 #include <functional>
 class CommandDispatcher{
-    std::unordered_map<std::string, std::function<void(std::vector<std::string>&, Database &)>>command;
+    std::unordered_map<std::string, std::function<std::string(std::vector<std::string>&, Database &)>>command;
     Server &s;
    public:
    CommandDispatcher(Server &s) : s(s){}
    void setAllCommands(){
       command["SET"] = [&](std::vector<std::string> &tokens, Database &db){
               db.set(tokens);
-              s.servSend("+OK\r\n");
+              return std::string("+OK\r\n");
       };
       command["GET"] = [&](std::vector<std::string> &tokens, Database &db){
               std::string res = db.get(tokens);
-              s.servSend("$"+std::to_string(res.length())+"\r\n"+res+"\r\n");
+              return std::string("$"+std::to_string(res.length())+"\r\n"+res+"\r\n");
       };
       command["DEL"] = [&](std::vector<std::string> &tokens, Database &db){
-              db.isDeletedSuccesfully(tokens) ? s.servSend(":1\r\n") : s.servSend(":0\r\n");
+             return db.isDeletedSuccesfully(tokens) ? std::string(":1\r\n") : std::string(":0\r\n");
       };
       command["EXISTS"] = [&](std::vector<std::string> &tokens, Database &db){
-              db.isExists(tokens) ? s.servSend(":1\r\n") : s.servSend(":0\r\n");
+             return  db.isExists(tokens) ? std::string(":1\r\n") : std::string(":0\r\n");
       };
       command["INCR"] = [&](std::vector<std::string> &tokens, Database &db){
               std::string res = db.incr(tokens);
-              s.servSend(":"+res+"\r\n");
+              return std::string(":"+res+"\r\n");
       };
       command["DECR"] = [&](std::vector<std::string> &tokens, Database &db){
               std::string res = db.decr(tokens);
-              s.servSend(":"+res+"\r\n");
+              return std::string(":"+res+"\r\n");
       };
       command["PING"] = [&](std::vector<std::string> &tokens, Database &db){
               if(tokens.size() == 1)
-                  s.servSend("+PONG\r\n");
+                  return std::string("+PONG\r\n");
               else
-              s.servSend("$" + std::to_string(tokens[1].size())+"\r\n" +tokens[1]+ "\r\n");
+              return std::string("$" + std::to_string(tokens[1].size())+"\r\n" +tokens[1]+ "\r\n");
       };
       
    }
-   bool isExecuteSuccesfully(std::vector<std::string>&tokens , Database &db){
+   bool isExecuteSuccesfully(std::vector<std::string>&tokens , Database &db, int clientFd){
          if(tokens.empty()) return false;
          std::string cmd = tokens[0];
        std::transform(cmd.begin(), cmd.end(), cmd.begin(),
@@ -49,7 +49,8 @@ class CommandDispatcher{
         if(it == command.end()){
               return false;
          }
-        it->second(tokens,db);
+        std::string res = it->second(tokens,db);
+        s.servSend(res,clientFd);
          return true;
    }
 
