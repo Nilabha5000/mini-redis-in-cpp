@@ -6,9 +6,18 @@
 #include <atomic>
 using namespace std;
 
-atomic<bool>running = true;
+atomic<bool>running = {true};
 void handleSigInt(int signo){
         running = false;
+}
+
+void installSignals(){
+    struct sigaction sa{};
+    sa.sa_handler = handleSigInt;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;   // <-- NO SA_RESTART
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
 }
 Server ::Server(){
    this->serverFd = socket(AF_INET,SOCK_STREAM,0);
@@ -30,13 +39,13 @@ bool Server:: startSuccesfully(){
      address.sin_addr.s_addr = INADDR_ANY;
      socklen_t addrlen = sizeof(address);
     if(bind(this->serverFd, (struct sockaddr*) &address, sizeof(address)) < 0){
-        cerr<<"Error to bind";
+        cerr<<"Error to bind\n";
         close(this->serverFd);
         this->serverFd = -1;
         return false;
     }
     if(listen(this->serverFd,10) < 0){
-        cerr<<"Error to listen";
+        cerr<<"Error to listen\n";
         close(this->serverFd);
          this->serverFd = -1;
         return false;
@@ -79,6 +88,7 @@ void Server::servLoop(){
         
         int clientFd = accept(this->serverFd,nullptr, nullptr);
         if(clientFd < 0){
+            if (errno == EINTR) continue;   // interrupted by signal → retry
            cerr<<"connection failed\n";
            continue;
         }
@@ -165,6 +175,8 @@ Server :: ~Server(){
 }
 int main(){
     signal(SIGINT,handleSigInt);
+    signal(SIGTERM,handleSigInt);
+    installSignals();
     cout<<"This is server running on PORT:" <<PORT<<"\n";
     Server serv;
     if(serv.startSuccesfully()){

@@ -24,10 +24,30 @@ class CommandDispatcher{
              return  db.isExists(tokens) ? std::string(":1\r\n") : std::string(":0\r\n");
       };
       command["INCR"] = [&](std::vector<std::string> &tokens, Database &db){
+              if(tokens.size() > 2 || tokens.size() < 2){
+                return std::string("-ERR wrong number of arguments\r\n");
+              }
+              std::string res = db.incr(tokens);
+              return std::string(":"+res+"\r\n");
+      };
+      command["INCRBY"] = [&](std::vector<std::string> &tokens, Database &db){
+              if(tokens.size() < 3){
+                  return std::string("-ERR wrong number of arguments\r\n");
+              }
               std::string res = db.incr(tokens);
               return std::string(":"+res+"\r\n");
       };
       command["DECR"] = [&](std::vector<std::string> &tokens, Database &db){
+              if(tokens.size() > 2 || tokens.size() < 2){
+                return std::string("-ERR wrong number of arguments\r\n");
+              }
+              std::string res = db.decr(tokens);
+              return std::string(":"+res+"\r\n");
+      };
+      command["DECRBY"] = [&](std::vector<std::string> &tokens, Database &db){
+                if(tokens.size() < 3){
+                  return std::string("-ERR wrong number of arguments\r\n");
+                }
               std::string res = db.decr(tokens);
               return std::string(":"+res+"\r\n");
       };

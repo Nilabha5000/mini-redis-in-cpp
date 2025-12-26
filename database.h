@@ -6,6 +6,7 @@
 #include <vector>
 #include <chrono>
 #include <algorithm>
+#include <mutex>
 struct Value
 {
      std::string data;
@@ -13,6 +14,7 @@ struct Value
 };
 
 class Database{
+    std::mutex m;
     std::unordered_map<std::string, Value>db;
     long long currentTimeMs();
     bool isExpired(std::string &key);

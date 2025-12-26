@@ -1,5 +1,4 @@
 #include "database.h"
-
 long long Database::currentTimeMs(){
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()
@@ -13,6 +12,7 @@ bool Database::isExpired(std::string &key){
 void Database::set(std::vector<std::string> &tokens){
     //to check tokens array contains right number of arguments or not.
     if(tokens.size() == 3 || tokens.size() == 5){
+        std::lock_guard<std::mutex>lock(this->m);
         //extracting key and value from the tokens array.
         std::string key = tokens[1];
         std::string value = tokens[2];
@@ -51,7 +51,7 @@ std::string Database::get(std::vector<std::string> &tokens){
     if(tokens.size() != 2){
         throw std::string("-ERR wrong number of arguments\r\n");
     }
-   
+    std::lock_guard<std::mutex>lock(this->m);
     std::string key = tokens[1];
     auto it = this->db.find(key);
     if(it != this->db.end() && isExpired(key)){
@@ -61,7 +61,6 @@ std::string Database::get(std::vector<std::string> &tokens){
     {
         throw std::string("$-1\r\n");
     }
-    
     return this->db[key].data;
 
 }
@@ -71,7 +70,7 @@ bool Database::isDeletedSuccesfully(std::vector<std::string> &tokens){
     if(tokens.size() != 2){
         throw std::string("-ERR wrong number of arguments\r\n");
     }
-   
+    std::lock_guard<std::mutex>lock(this->m);
     std::string key = tokens[1];
     if(this->db.find(key) == this->db.end())
     {
@@ -91,7 +90,7 @@ bool Database::isExists(std::vector<std::string> &tokens){
     if(tokens.size() != 2){
         throw std::string("-ERR wrong number of arguments\r\n");
     }
-   
+    std::lock_guard<std::mutex>lock(this->m);
     std::string key = tokens[1];
     if(this->db.find(key) == this->db.end())
     {
@@ -100,7 +99,7 @@ bool Database::isExists(std::vector<std::string> &tokens){
     bool res = true;
     if(isExpired(key))
        res = false;
-    return true;
+    return res;
 
 }
 //it checks a given string is a number then return true otherwise false.
@@ -121,20 +120,25 @@ bool Database::isNumber(std::string &str){
 }
 std::string Database::incr(std::vector<std::string>&tokens){
      //to check tokens array contains right number of arguments or not.
-    if(tokens.size() != 2){
+    if(tokens.size() < 2 || tokens.size() > 3){
         throw std::string("-ERR wrong number of arguments\r\n");
+    }
+    std::lock_guard<std::mutex>lock(this->m);
+    int addBy = 1;
+    bool notAddByOne = tokens.size() > 2;
+    if(notAddByOne){
+        if(!isNumber(tokens[2]))
+          throw std::string("-ERR third argument is not an integer or out of range\r\n");
+        addBy = std::stoi(tokens[2]);
     }
     //extracting the key from the tokens array.
     std::string key = tokens[1];
-    if(this->db.find(key) == this->db.end())
-    {
-        this->db[key].data = "1";
-        this->db[key].expireAt = -1;
+    if(this->db.find(key) == this->db.end() || isExpired(key)){
+        if(notAddByOne)
+            this->db[key] = {tokens[2] , -1LL};
+        else
+          this->db[key] = {"0" , -1LL};
         return this->db[key].data;
-    }
-    if(isExpired(key)){
-        this->db.erase(key);
-        return "0";
     }
     //check if the value is not a number then throw value is not an integer or out of range.
     if(!isNumber(this->db[key].data)){
@@ -142,30 +146,34 @@ std::string Database::incr(std::vector<std::string>&tokens){
     }
     //increment the value and store back to database i.e hash table
     int val = std::stoi(this->db[key].data);
-    val++;
+    val += addBy;
     this->db[key].data = std::to_string(val);
-
     return this->db[key].data;
 }
 
 std::string Database::decr(std::vector<std::string>&tokens){
      //to check tokens array contains right number of arguments or not.
-    if(tokens.size() != 2){
+    if(tokens.size()  < 2 || tokens.size() > 3){
         throw std::string("-ERR wrong number of arguments\r\n");
+    }
+    std::lock_guard<std::mutex>lock(this->m);
+    int decBy = 1;
+    bool notDecByOne = tokens.size() > 2;
+    if(notDecByOne){
+        if(!isNumber(tokens[2]))
+          throw std::string("-ERR third argument is not an integer or out of range\r\n");
+        decBy = std::stoi(tokens[2]);
     }
     //extracting the key from the tokens array.
     std::string key = tokens[1];
     //check if the key is not present in the hashtable then 
-    //store "0" on that key value.
-    if(this->db.find(key) == this->db.end())
-    {
-        this->db[key].data = "0";
-        this->db[key].expireAt = -1;
+    //store "-1" on that key value.
+    if(this->db.find(key) == this->db.end() || isExpired(key)){
+        if(notDecByOne)
+            this->db[key] = {tokens[2] , -1LL};
+        else
+          this->db[key] = {"-1" , -1LL};
         return this->db[key].data;
-    }
-    if(isExpired(key)){
-        this->db.erase(key);
-        return "0";
     }
     //check if the value is not a number then throw value is not an integer or out of range.
     if(!isNumber(this->db[key].data)){
@@ -174,9 +182,8 @@ std::string Database::decr(std::vector<std::string>&tokens){
     //converting string to integer.
     int val = std::stoi(this->db[key].data);
     //decrement the value.
-    val--;
+    val -= decBy;
     //assigning the updated value to that key. 
     this->db[key].data = std::to_string(val);
-
     return this->db[key].data;
 }
